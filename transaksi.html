@@ -23,7 +23,6 @@
     .popup h2 { margin:0 0 15px; font-size:18px; font-weight:600; text-align:center; }
     .cart-item { padding:10px; border-bottom:1px solid #eee; }
     .cart-item:last-child { border-bottom:none; }
-    .cart-item strong { display:block; margin-bottom:5px; }
     .subtotal { font-weight:600; color:#27ae60; margin-top:5px; }
     .total-all { font-weight:700; margin-top:15px; text-align:right; font-size:16px; }
     .btn { display:inline-block; margin:8px 4px 0; padding:10px 18px; background:#3498db; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; transition:0.3s; }
@@ -32,6 +31,8 @@
     .btn.cancel:hover { background:#95a5a6; }
     .btn.pay { background:#27ae60; }
     .btn.pay:hover { background:#1e8449; }
+    .btn.save { background:#f39c12; }
+    .btn.save:hover { background:#d68910; }
     .receipt-preview { background:#f9f9f9; border:1px solid #ddd; padding:10px; border-radius:8px; font-family: monospace; white-space: pre-wrap; font-size:13px; margin-top:15px; }
   </style>
 </head>
@@ -52,6 +53,7 @@
       <div id="receiptPreview" class="receipt-preview">Belum ada data</div>
       <div style="text-align:center;">
         <button class="btn pay" onclick="printReceipt()">🖨 Cetak Struk</button>
+        <button class="btn save" onclick="saveReceipt()">💾 Simpan Struk</button>
         <button class="btn cancel" onclick="closeCart()">Tutup</button>
       </div>
     </div>
@@ -61,7 +63,6 @@
     const GAS_URL="https://script.google.com/macros/s/AKfycbz8OQ2w68DXtXbYudR8nxV9KcruIl5iNQHFHG4ISOjg3S8W1X9ps8mw8U9H7hwqzIIN/exec";
     let cart=[];
 
-    // load menu
     async function loadMenu(){
       let res=await fetch(GAS_URL+"?action=getMenu");
       let data=await res.json();
@@ -80,16 +81,11 @@
     }
     loadMenu();
 
-    function addToCart(item){ 
-      cart.push({nama:item.Nama,harga:parseInt(item.Harga)}); 
-      updateCartCount(); 
-    }
-    function updateCartCount(){ 
-      document.getElementById("cart-count").innerText=cart.length; 
-    }
+    function addToCart(item){ cart.push({nama:item.Nama,harga:parseInt(item.Harga)}); updateCartCount(); }
+    function updateCartCount(){ document.getElementById("cart-count").innerText=cart.length; }
+
     function openCart(){
-      let cartItems=document.getElementById("cartItems");
-      cartItems.innerHTML="";
+      let cartItems=document.getElementById("cartItems"); cartItems.innerHTML="";
       let total=0;
       cart.forEach((c)=>{ 
         total+=c.harga;
@@ -102,16 +98,10 @@
       renderReceiptPreview();
       document.getElementById("cart-popup").style.display="flex";
     }
-    function closeCart(){ 
-      document.getElementById("cart-popup").style.display="none"; 
-    }
+    function closeCart(){ document.getElementById("cart-popup").style.display="none"; }
 
-    function loadStoreSetting(){ 
-      return JSON.parse(localStorage.getItem("storeSetting")) || {}; 
-    }
-    function loadPrinterSetting(){ 
-      return JSON.parse(localStorage.getItem("printerSetting")) || {}; 
-    }
+    function loadStoreSetting(){ return JSON.parse(localStorage.getItem("storeSetting")) || {}; }
+    function loadPrinterSetting(){ return JSON.parse(localStorage.getItem("printerSetting")) || {}; }
 
     function renderReceiptPreview(){
       const store = loadStoreSetting();
@@ -134,23 +124,27 @@
       document.getElementById("receiptPreview").innerHTML = html;
     }
 
-    // fungsi center text
     function centerText(text, width=32) {
       let spaces = Math.max(0, Math.floor((width - text.length) / 2));
       return " ".repeat(spaces) + text;
     }
 
-    async function printReceipt(){
-      if(cart.length===0){ 
-        alert("Keranjang kosong!"); 
-        return; 
-      }
+    function saveToLaporan(total, receipt, items){
+      let laporan = JSON.parse(localStorage.getItem("laporan")) || [];
+      laporan.push({
+        waktu: new Date().toLocaleString(),
+        total: total,
+        items: items,
+        struk: receipt
+      });
+      localStorage.setItem("laporan", JSON.stringify(laporan));
+    }
 
+    function saveReceipt(){
+      if(cart.length===0){ alert("Keranjang kosong!"); return; }
       const store = loadStoreSetting();
-      const printer = loadPrinterSetting();
-      let total=cart.reduce((a,b)=>a+b.harga,0);
+      let total = cart.reduce((a,b)=>a+b.harga,0);
 
-      // isi struk
       let receipt = "";
       receipt += "\n";
       receipt += "====================\n";
@@ -166,8 +160,35 @@
       receipt += "--------------------\n";
       receipt += centerText(store.footer||"Terima Kasih") + "\n";
       receipt += centerText("Powered By Mykasir @P4170") + "\n";
+      receipt += "====================\n\n\n";
+
+      saveToLaporan(total, receipt, cart);
+      alert("✅ Struk berhasil disimpan tanpa dicetak!");
+      cart=[]; updateCartCount(); closeCart();
+    }
+
+    async function printReceipt(){
+      if(cart.length===0){ alert("Keranjang kosong!"); return; }
+      const store = loadStoreSetting();
+      const printer = loadPrinterSetting();
+      let total=cart.reduce((a,b)=>a+b.harga,0);
+
+      let receipt = "";
+      receipt += "\n";
       receipt += "====================\n";
-      receipt += "\n\n\n\n"; // extra baris kosong biar footer keluar
+      receipt += centerText((store.name||"Nama Toko").toUpperCase()) + "\n";
+      receipt += "====================\n";
+      receipt += `${store.address||"Alamat Toko"}\n`;
+      receipt += `${store.phone||"Nomor HP"}\n`;
+      receipt += "--------------------\n";
+      receipt += "RINCIAN PESANAN:\n";
+      cart.forEach(c=>{ receipt += `${c.nama} - Rp${c.harga}\n`; });
+      receipt += "--------------------\n";
+      receipt += `TOTAL: Rp${total}\n`;
+      receipt += "--------------------\n";
+      receipt += centerText(store.footer||"Terima Kasih") + "\n";
+      receipt += centerText("Powered By Mykasir @P4170") + "\n";
+      receipt += "====================\n\n\n";
 
       try {
         let device;
@@ -187,6 +208,8 @@
         const characteristic = await service.getCharacteristic(0x2AF1);
         await characteristic.writeValue(new TextEncoder().encode(receipt));
         alert("✅ Struk berhasil dicetak!");
+
+        saveToLaporan(total, receipt, cart);
         cart=[]; updateCartCount(); closeCart();
       } catch (err){
         console.error(err);
