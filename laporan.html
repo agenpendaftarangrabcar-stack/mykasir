@@ -5,69 +5,87 @@
   <title>Laporan</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f7f9;
-      text-align: center;
-    }
-    header {
-      background: #4CAF50;
-      color: white;
-      padding: 15px;
-      font-size: 20px;
-      font-weight: bold;
-    }
-    .container {
-      padding: 30px;
-    }
-    .btn {
-      display: block;
-      width: 80%;
-      max-width: 300px;
-      margin: 15px auto;
-      padding: 15px;
-      font-size: 18px;
-      font-weight: bold;
-      border: none;
-      border-radius: 10px;
-      background: #4CAF50;
-      color: white;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-      transition: 0.2s;
-    }
-    .btn:hover {
-      background: #45a049;
-      transform: scale(1.05);
-    }
-    footer {
-      background: #333;
-      color: white;
-      text-align: center;
-      padding: 10px;
-      margin-top: 40px;
-    }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f4f7f9; text-align: center; }
+    header { background: #4CAF50; color: white; padding: 15px; font-size: 20px; font-weight: bold; }
+    .container { padding: 30px; }
+    .btn { display: block; width: 90%; max-width: 400px; margin: 10px auto; padding: 15px; font-size: 16px; font-weight: bold; border: none; border-radius: 10px; background: #3498db; color: white; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: 0.2s; text-align:left; }
+    .btn:hover { background: #2980b9; transform: scale(1.03); }
+    footer { background: #333; color: white; text-align: center; padding: 10px; margin-top: 40px; }
   </style>
 </head>
 <body>
+  <header>Menu Laporan</header>
+  <div class="container" id="laporanContainer"></div>
+  <footer>Copyright © 2025 MyKasir</footer>
 
-  <!-- Header -->
-  <header>
-    Menu Laporan
-  </header>
-
-  <!-- Tombol Menu -->
-  <div class="container">
-    <button class="btn" onclick="window.location.href='laporan-pengeluaran.html'">Pengeluaran</button>
-    <button class="btn" onclick="window.location.href='laporan-pemasukan.html'">Pemasukan</button>
-    <button class="btn" onclick="window.location.href='laporan-hutang.html'">Hutang</button>
+  <!-- Modal detail -->
+  <div id="detailModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;">
+    <div style="background:#fff;padding:20px;border-radius:10px;max-width:400px;width:90%;max-height:90%;overflow:auto;">
+      <h3>Detail Transaksi</h3>
+      <pre id="detailStruk" style="background:#f4f4f4;padding:10px;border-radius:8px;"></pre>
+      <button class="btn" onclick="rePrint()">🖨 Print Ulang</button>
+      <button class="btn" style="background:#999" onclick="closeDetail()">Tutup</button>
+    </div>
   </div>
 
-  <!-- Footer -->
-  <footer>
-    Copyright © 2025 MyKasir
-  </footer>
+  <script>
+    let laporan = JSON.parse(localStorage.getItem("laporan")) || [];
+    let selectedStruk = "";
 
+    function renderLaporan(){
+      let container = document.getElementById("laporanContainer");
+      container.innerHTML = "";
+      if(laporan.length === 0){
+        container.innerHTML = "<p>Belum ada transaksi tersimpan.</p>";
+        return;
+      }
+      laporan.slice().reverse().forEach((l)=>{
+        let div=document.createElement("button");
+        div.className="btn";
+        div.innerText=`${l.waktu} | Total: Rp${l.total}`;
+        div.onclick=()=>showDetail(l);
+        container.appendChild(div);
+      });
+    }
+
+    function showDetail(l){
+      selectedStruk = l.struk;
+      document.getElementById("detailStruk").innerText = l.struk;
+      document.getElementById("detailModal").style.display="flex";
+    }
+
+    function closeDetail(){
+      document.getElementById("detailModal").style.display="none";
+    }
+
+    async function rePrint(){
+      if(!selectedStruk){return;}
+      try {
+        const printer = JSON.parse(localStorage.getItem("printerSetting")) || {};
+        let device;
+        if(printer.autoConnect==="yes" && printer.printerName){
+          device = await navigator.bluetooth.requestDevice({
+            filters: [{ namePrefix: printer.printerName }],
+            optionalServices: [0x18F0]
+          });
+        } else {
+          device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: [0x18F0]
+          });
+        }
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(0x18F0);
+        const characteristic = await service.getCharacteristic(0x2AF1);
+        await characteristic.writeValue(new TextEncoder().encode(selectedStruk));
+        alert("✅ Struk berhasil di-print ulang!");
+      } catch(err){
+        alert("⚠️ Gagal print ulang.");
+        console.error(err);
+      }
+    }
+
+    renderLaporan();
+  </script>
 </body>
 </html>
