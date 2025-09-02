@@ -134,6 +134,12 @@
       document.getElementById("receiptPreview").innerHTML = html;
     }
 
+    // fungsi center text
+    function centerText(text, width=32) {
+      let spaces = Math.max(0, Math.floor((width - text.length) / 2));
+      return " ".repeat(spaces) + text;
+    }
+
     async function printReceipt(){
       if(cart.length===0){ 
         alert("Keranjang kosong!"); 
@@ -144,11 +150,11 @@
       const printer = loadPrinterSetting();
       let total=cart.reduce((a,b)=>a+b.harga,0);
 
-      // buat isi struk
+      // isi struk
       let receipt = "";
       receipt += "\n";
       receipt += "====================\n";
-      receipt += `     ${(store.name||"Nama Toko").toUpperCase()}\n`;
+      receipt += centerText((store.name||"Nama Toko").toUpperCase()) + "\n";
       receipt += "====================\n";
       receipt += `${store.address||"Alamat Toko"}\n`;
       receipt += `${store.phone||"Nomor HP"}\n`;
@@ -158,21 +164,19 @@
       receipt += "--------------------\n";
       receipt += `TOTAL: Rp${total}\n`;
       receipt += "--------------------\n";
-      receipt += `${store.footer||"Terima Kasih"}\n`;
-      receipt += "Powered By Mykasir @P4170\n";
+      receipt += centerText(store.footer||"Terima Kasih") + "\n";
+      receipt += centerText("Powered By Mykasir @P4170") + "\n";
       receipt += "====================\n";
-      receipt += "\n\n"; 
+      receipt += "\n\n\n\n"; // extra baris kosong biar footer keluar
 
       try {
         let device;
         if(printer.autoConnect==="yes" && printer.printerName){
-          // auto connect ke printer sesuai nama
           device = await navigator.bluetooth.requestDevice({
-            filters: [{ name: printer.printerName }],
+            filters: [{ namePrefix: printer.printerName }],
             optionalServices: [0x18F0]
           });
         } else {
-          // manual pilih printer
           device = await navigator.bluetooth.requestDevice({
             acceptAllDevices: true,
             optionalServices: [0x18F0]
