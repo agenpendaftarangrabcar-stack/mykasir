@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengaturan Toko</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background:#f5f7fa; }
+    h2 { margin: 0; padding: 15px; background:#3498db; color:white; text-align:center; }
+    .tabs { display: flex; background:#ecf0f1; border-bottom:1px solid #ccc; }
+    .tab { flex:1; padding:12px; text-align:center; cursor:pointer; font-weight:bold; }
+    .tab.active { background:white; border-bottom:2px solid #3498db; color:#3498db; }
+    .tab-content { display:none; padding:20px; background:white; }
+    .tab-content.active { display:block; }
+    label { display:block; margin-top:12px; font-weight:bold; }
+    input, textarea, select {
+      width:100%; padding:8px; margin-top:5px;
+      border:1px solid #ccc; border-radius:6px;
+    }
+    button {
+      margin-top:15px; padding:10px 15px;
+      background:#3498db; color:white; border:none;
+      border-radius:6px; cursor:pointer; font-weight:bold;
+    }
+    button:hover { background:#2980b9; }
+    .preview {
+      margin-top:20px; padding:15px;
+      border:1px solid #ccc; border-radius:6px;
+      background:#fff; font-family: monospace; white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h2>⚙️ Pengaturan</h2>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('struk')">Pengaturan Struk</div>
+    <div class="tab" onclick="showTab('printer')">Pengaturan Printer</div>
+  </div>
+
+  <!-- Tab Struk -->
+  <div id="struk" class="tab-content active">
+    <label>Nama Toko</label>
+    <input type="text" id="name" placeholder="Contoh: VIVI SNACKS">
+
+    <label>Alamat Toko</label>
+    <textarea id="address" placeholder="Alamat lengkap toko"></textarea>
+
+    <label>Nomor HP</label>
+    <input type="text" id="phone" placeholder="08xxxxxxx">
+
+    <label>Footer Struk</label>
+    <input type="text" id="footer" placeholder="Terima Kasih">
+
+    <button onclick="saveSetting()">Simpan Pengaturan Struk</button>
+
+    <h3>Preview Struk</h3>
+    <div id="preview" class="preview">Belum ada data</div>
+  </div>
+
+  <!-- Tab Printer -->
+  <div id="printer" class="tab-content">
+    <label>Nama Printer Bluetooth</label>
+    <input type="text" id="printerName" placeholder="Contoh: MTP-58">
+
+    <label>Auto Connect</label>
+    <select id="autoConnect">
+      <option value="no">Tidak</option>
+      <option value="yes">Ya</option>
+    </select>
+
+    <button onclick="savePrinterSetting()">Simpan Pengaturan Printer</button>
+    <div id="printerPreview" class="preview">Belum ada pengaturan printer</div>
+  </div>
+
+  <script>
+    function showTab(tabId){
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
+      document.querySelector(`.tab[onclick="showTab('${tabId}')"]`).classList.add("active");
+      document.getElementById(tabId).classList.add("active");
+    }
+
+    function saveSetting(){
+      const storeSetting = {
+        name: document.getElementById("name").value.trim(),
+        address: document.getElementById("address").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        footer: document.getElementById("footer").value.trim()
+      };
+      localStorage.setItem("storeSetting", JSON.stringify(storeSetting));
+      renderPreview();
+      alert("✅ Pengaturan Struk berhasil disimpan!");
+    }
+
+    function renderPreview(){
+      const store = JSON.parse(localStorage.getItem("storeSetting")) || {};
+      const name = (store.name || "NAMA TOKO").toUpperCase();
+      const address = store.address || "Alamat Toko";
+      const phone = store.phone || "Nomor HP";
+      const footer = store.footer || "Terima Kasih";
+
+      let preview = "";
+      preview += "\n";
+      preview += "====================\n";
+      preview += `     ${name}\n`;
+      preview += "====================\n";
+      preview += `${address}\n`;
+      preview += `${phone}\n`;
+      preview += "--------------------\n";
+      preview += "RINCIAN PESANAN\n";
+      preview += "Contoh Item - Rp1000\n";
+      preview += "--------------------\n";
+      preview += "TOTAL: Rp1000\n";
+      preview += "--------------------\n";
+      preview += `${footer}\n`;
+      preview += "Powered By Mykasir @P4170\n";
+      preview += "====================\n\n";
+
+      document.getElementById("preview").innerText = preview;
+    }
+
+    function savePrinterSetting(){
+      const printerSetting = {
+        printerName: document.getElementById("printerName").value.trim(),
+        autoConnect: document.getElementById("autoConnect").value
+      };
+      localStorage.setItem("printerSetting", JSON.stringify(printerSetting));
+      renderPrinterPreview();
+      alert("✅ Pengaturan Printer berhasil disimpan!");
+    }
+
+    function renderPrinterPreview(){
+      const printer = JSON.parse(localStorage.getItem("printerSetting")) || {};
+      let preview = "Nama Printer: " + (printer.printerName || "Belum diset") + "\n";
+      preview += "Auto Connect: " + (printer.autoConnect === "yes" ? "Ya" : "Tidak");
+      document.getElementById("printerPreview").innerText = preview;
+    }
+
+    window.onload = () => {
+      const store = JSON.parse(localStorage.getItem("storeSetting")) || {};
+      if(store.name) document.getElementById("name").value = store.name;
+      if(store.address) document.getElementById("address").value = store.address;
+      if(store.phone) document.getElementById("phone").value = store.phone;
+      if(store.footer) document.getElementById("footer").value = store.footer;
+      renderPreview();
+
+      const printer = JSON.parse(localStorage.getItem("printerSetting")) || {};
+      if(printer.printerName) document.getElementById("printerName").value = printer.printerName;
+      if(printer.autoConnect) document.getElementById("autoConnect").value = printer.autoConnect;
+      renderPrinterPreview();
+    };
+  </script>
+</body>
+</html>

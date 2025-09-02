@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Data Produk</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f7f9;
+    }
+    header {
+      background: #4CAF50;
+      color: white;
+      padding: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .container {
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    table th, table td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: center;
+    }
+    table th {
+      background: #4CAF50;
+      color: white;
+    }
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 2px;
+    }
+    .btn-edit {
+      background: #2196F3;
+      color: white;
+    }
+    .btn-edit:hover {
+      background: #1976D2;
+    }
+    .btn-delete {
+      background: #f44336;
+      color: white;
+    }
+    .btn-delete:hover {
+      background: #d32f2f;
+    }
+    footer {
+      background: #333;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>Admin - Data Produk</header>
+
+  <div class="container">
+    <table id="produkTable">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Nama Produk</th>
+          <th>Harga</th>
+          <th>Stok</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Data produk muncul di sini -->
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    Copyright © 2025 MyKasir
+  </footer>
+
+  <script>
+    // Ambil data produk dari localStorage
+    let produkList = JSON.parse(localStorage.getItem("produkList")) || [];
+
+    function renderTable() {
+      const tbody = document.querySelector("#produkTable tbody");
+      tbody.innerHTML = "";
+
+      produkList.forEach((p, index) => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${p.nama}</td>
+          <td>Rp ${p.harga}</td>
+          <td>${p.stok}</td>
+          <td>
+            <button class="btn btn-edit" onclick="editStok(${index})">Edit</button>
+            <button class="btn btn-delete" onclick="hapusProduk(${index})">Hapus</button>
+          </td>
+        `;
+
+        tbody.appendChild(row);
+      });
+    }
+
+    function editStok(index) {
+      const stokBaru = prompt("Masukkan stok baru:", produkList[index].stok);
+      if (stokBaru !== null && !isNaN(stokBaru)) {
+        produkList[index].stok = parseInt(stokBaru);
+        localStorage.setItem("produkList", JSON.stringify(produkList));
+        renderTable();
+      }
+    }
+
+    function hapusProduk(index) {
+      if (confirm("Yakin mau hapus produk ini?")) {
+        produkList.splice(index, 1);
+        localStorage.setItem("produkList", JSON.stringify(produkList));
+        renderTable();
+      }
+    }
+
+    // Render saat halaman dibuka
+    renderTable();
+  </script>
+
+</body>
+</html>

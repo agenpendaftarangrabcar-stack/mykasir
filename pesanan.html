@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Pesanan - My Kasirku</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #eaf4f4;
+      color: #333;
+    }
+    header {
+      background: linear-gradient(135deg, #00b894, #00997a);
+      color: white;
+      padding: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .container { padding: 20px; }
+    form {
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+      margin-bottom: 20px;
+    }
+    input {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+    #nama {
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    .menu-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .menu-row input[type="text"] {
+      flex: 2;
+    }
+    .qty-box {
+      display: flex;
+      align-items: center;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .qty-box button {
+      background: #00b894;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .qty-box input {
+      width: 50px;
+      text-align: center;
+      border: none;
+    }
+    .btn {
+      background: linear-gradient(135deg,#00b894,#55efc4);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+      margin-top: 8px;
+    }
+    .btn:hover { transform: scale(1.05); }
+    .orders { display: grid; gap: 15px; }
+    .order {
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .order h3 { margin: 0; color: #00695c; }
+    .done-btn, .print-btn {
+      margin-top: 10px;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+      display: inline-block;
+    }
+    .done-btn {
+      background: #d63031;
+      color: white;
+    }
+    .done-btn:hover { background: #b71c1c; }
+    .print-btn {
+      background: #0984e3;
+      color: white;
+      margin-left: 8px;
+    }
+    .print-btn:hover { background: #0652DD; }
+  </style>
+</head>
+<body>
+
+  <header>📋 Pesanan</header>
+
+  <div class="container">
+    <!-- Form Tambah Pesanan -->
+    <form id="orderForm" onsubmit="saveOrder(event)">
+      <input type="text" id="nama" placeholder="Nama Pemesan" required>
+
+      <div id="menuList"></div>
+
+      <button type="button" class="btn" onclick="addMenuRow()">➕ Tambah Menu</button>
+      <button type="submit" class="btn">✅ Simpan Pesanan</button>
+    </form>
+
+    <!-- List Pesanan -->
+    <div class="orders" id="orderList"></div>
+  </div>
+
+<script>
+let orders = [];
+
+// simpan ke localStorage
+function saveOrdersToStorage() {
+  localStorage.setItem("orders", JSON.stringify(orders));
+}
+
+// load dari localStorage
+function loadOrdersFromStorage() {
+  const data = localStorage.getItem("orders");
+  if (data) {
+    orders = JSON.parse(data);
+    renderOrders();
+  }
+}
+
+function changeQty(btn,delta){
+  const input=btn.parentElement.querySelector("input");
+  let val=parseInt(input.value)+delta;
+  if(val<0) val=0; // minimal 0
+  input.value=val;
+}
+
+function addMenuRow(){
+  const div=document.createElement("div");
+  div.className="menu-row";
+  div.innerHTML=`
+    <input type="text" placeholder="Menu Pesanan" required>
+    <div class="qty-box">
+      <button type="button" onclick="changeQty(this,-1)">-</button>
+      <input type="number" value="0" min="0" required>
+      <button type="button" onclick="changeQty(this,1)">+</button>
+    </div>
+  `;
+  document.getElementById("menuList").appendChild(div);
+}
+
+function saveOrder(e){
+  e.preventDefault();
+  const nama=document.getElementById("nama").value;
+  const menuRows=document.querySelectorAll(".menu-row");
+  let items=[];
+  menuRows.forEach(row=>{
+    let menu=row.querySelector("input[type=text]").value;
+    let qty=row.querySelector("input[type=number]").value;
+    if(menu.trim()!=="" && parseInt(qty)>0){
+      items.push({menu,qty});
+    }
+  });
+
+  if(items.length===0){
+    alert("Minimal 1 menu dengan jumlah > 0");
+    return;
+  }
+
+  let order={id:Date.now(),nama,items};
+  orders.push(order);
+  saveOrdersToStorage();
+  renderOrders();
+
+  e.target.reset();
+  document.getElementById("menuList").innerHTML="";
+  addMenuRow();
+}
+
+function renderOrders(){
+  let list=document.getElementById("orderList");
+  list.innerHTML="";
+  orders.forEach(o=>{
+    let div=document.createElement("div");
+    div.className="order";
+    let itemsHtml=o.items.map(i=>`<li>${i.menu} x${i.qty}</li>`).join("");
+    div.innerHTML=`
+      <h3>Pesanan: ${o.nama}</h3>
+      <ul>${itemsHtml}</ul>
+      <button class="done-btn" onclick="selesai(${o.id})">✔ Selesaikan</button>
+      <button class="print-btn" onclick="cetakStruk(${o.id})">🖨 Cetak Struk</button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function selesai(id){
+  orders=orders.filter(o=>o.id!==id);
+  saveOrdersToStorage();
+  renderOrders();
+}
+
+function cetakStruk(id){
+  const order = orders.find(o => o.id === id);
+  if (!order) return;
+
+  // ambil setting toko
+  const setting = JSON.parse(localStorage.getItem("tokoSetting")) || {};
+  const logo = setting.logo ? `<img src="${setting.logo}" style="max-height:80px;">` : "";
+  const namaToko = setting.nama || "Nama Toko";
+  const alamat = setting.alamat || "";
+  const noHp = setting.noHp ? "Telp: " + setting.noHp : "";
+
+  let itemsHtml = order.items.map(i=>`${i.menu} x${i.qty}`).join("<br>");
+
+  let w = window.open("", "Struk", "width=400,height=600");
+  w.document.write(`
+    <html>
+    <head><title>Struk</title></head>
+    <body style="font-family: monospace; text-align:center;">
+      ${logo}<br>
+      <h2>${namaToko}</h2>
+      <small>${alamat}<br>${noHp}</small>
+      <hr>
+      <b>Pemesan: ${order.nama}</b><br><br>
+      ${itemsHtml}
+      <hr>
+      <small>Terima kasih!</small>
+    </body>
+    </html>
+  `);
+  w.document.close();
+  w.print();
+}
+
+// load saat pertama
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("menuList").innerHTML="";
+  addMenuRow();
+  loadOrdersFromStorage();
+});
+</script>
+
+</body>
+</html>

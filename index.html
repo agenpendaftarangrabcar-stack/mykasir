@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>MyKasir</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #eaf4f4; /* hijau toska soft */
+      color: #333;
+    }
+    header {
+      background: linear-gradient(135deg, #00b894, #00997a);
+      color: white;
+      padding: 15px;
+      font-size: 22px;
+      font-weight: bold;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .menu-top {
+      display: flex;
+      justify-content: space-around;
+      padding: 12px;
+      background: #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin: 20px; /* biar ada jarak dengan banner */
+      border-radius: 12px;
+    }
+    .menu-top a {
+      flex: 1;
+      margin: 5px;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #00b894, #55efc4);
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .menu-top a:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+    .banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 25px;
+      margin: 20px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+    }
+    .banner h2 {
+      margin: 0;
+      font-size: 24px;
+      color: #00695c;
+    }
+    .banner img {
+      max-width: 120px;
+    }
+    .grid-menu {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 20px;
+    }
+    .grid-menu .item {
+      background: white;
+      border-radius: 18px;
+      text-align: center;
+      padding: 20px 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    }
+    .grid-menu .item:hover {
+      transform: translateY(-4px);
+      background: #dff9fb;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    }
+    .grid-menu img {
+      width: 56px;
+      height: 56px;
+      margin-bottom: 10px;
+    }
+    /* Hilangin underline link */
+    .grid-menu a {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    footer {
+      background: #00695c;
+      color: #e0f7fa;
+      text-align: center;
+      padding: 12px;
+      margin-top: 30px;
+      font-size: 14px;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      box-shadow: 0 -2px 6px rgba(0,0,0,0.15);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    MyKasir
+  </header>
+
+  <!-- Banner -->
+  <div class="banner">
+    <h2>Welcome WebApp MyKasir</h2>
+    <img src="https://ik.imagekit.io/qdmpemhm2/1000002866-removebg-preview.png?updatedAt=1756481848548" alt="MyKasir Logo">
+  </div>
+
+  <!-- Menu Top (Penjualan & Pesanan) -->
+  <div class="menu-top">
+    <a href="transaksi.html"><i class="fa-solid fa-cash-register"></i> Transaksi</a>
+    <a href="pesanan.html"><i class="fa-solid fa-receipt"></i> Pesanan</a>
+  </div>
+
+  <!-- Menu Grid -->
+  <div class="grid-menu">
+    <a href="input.html" class="item">
+      <img src="https://img.icons8.com/fluency/96/keyboard.png"/>
+      <div>Input</div>
+    </a>
+
+    <a href="produk.html" class="item">
+      <img src="https://img.icons8.com/fluency/96/box.png"/>
+      <div>Produk</div>
+    </a>
+
+    <a href="laporan.html" class="item">
+      <img src="https://img.icons8.com/fluency/96/combo-chart.png"/>
+      <div>Laporan</div>
+    </a>
+
+    <a href="admin.html" class="item">
+      <img src="https://img.icons8.com/fluency/96/administrator-male.png"/>
+      <div>Admin</div>
+    </a>
+
+    <a href="official.html" class="item">
+      <img src="https://img.icons8.com/fluency/96/verified-badge.png"/>
+      <div>Official</div>
+    </a>
+
+    <a href="setting.html" class="item">
+      <img src="https://img.icons8.com/fluency/96/settings.png"/>
+      <div>Setting</div>
+    </a>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    Copyright © 2025 MyKasir
+  </footer>
+
+</body>
+</html>

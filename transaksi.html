@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kasir - Vivi Snacks</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    body { margin:0; font-family:'Inter',sans-serif; background:#f5f7fa; color:#2c3e50; }
+    header { background:#3498db; padding:15px; text-align:center; color:white; font-weight:600; font-size:20px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .menu-container { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:15px; padding:20px; }
+    .card { background:#fff; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); transition:0.3s; cursor:pointer; }
+    .card:hover { transform:translateY(-4px); }
+    .card img { width:100%; height:140px; object-fit:cover; border-radius:12px 12px 0 0; }
+    .card-body { padding:12px; text-align:center; }
+    .card h3 { margin:8px 0 4px; font-size:16px; font-weight:600; }
+    .card p { margin:0; color:#27ae60; font-weight:600; }
+    #cart-btn { position:fixed; bottom:30px; right:30px; background:#3498db; color:white; border-radius:50%; width:60px; height:60px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+    #cart-count { position:absolute; top:8px; right:8px; background:#e74c3c; color:white; border-radius:50%; padding:2px 6px; font-size:0.75rem; }
+    .popup { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:1000; }
+    .popup-content { background:#fff; padding:20px; border-radius:12px; max-width:420px; width:90%; box-shadow:0 6px 20px rgba(0,0,0,0.2); animation:popIn 0.3s ease; max-height:90vh; overflow-y:auto; }
+    @keyframes popIn { from{transform:translateY(20px); opacity:0;} to{transform:translateY(0); opacity:1;} }
+    .popup h2 { margin:0 0 15px; font-size:18px; font-weight:600; text-align:center; }
+    .cart-item { padding:10px; border-bottom:1px solid #eee; }
+    .cart-item:last-child { border-bottom:none; }
+    .cart-item strong { display:block; margin-bottom:5px; }
+    .subtotal { font-weight:600; color:#27ae60; margin-top:5px; }
+    .total-all { font-weight:700; margin-top:15px; text-align:right; font-size:16px; }
+    .btn { display:inline-block; margin:8px 4px 0; padding:10px 18px; background:#3498db; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; transition:0.3s; }
+    .btn:hover { background:#2980b9; }
+    .btn.cancel { background:#bdc3c7; color:#2c3e50; }
+    .btn.cancel:hover { background:#95a5a6; }
+    .btn.pay { background:#27ae60; }
+    .btn.pay:hover { background:#1e8449; }
+    .receipt-preview { background:#f9f9f9; border:1px solid #ddd; padding:10px; border-radius:8px; font-family: monospace; white-space: pre-wrap; font-size:13px; margin-top:15px; }
+  </style>
+</head>
+<body>
+  <header>🍩 Vivi Snacks - Kasir</header>
+  <div class="menu-container" id="menu"></div>
+
+  <!-- Floating Cart -->
+  <div id="cart-btn" onclick="openCart()">🛒<div id="cart-count">0</div></div>
+
+  <!-- Cart Popup -->
+  <div class="popup" id="cart-popup">
+    <div class="popup-content">
+      <h2>Rincian Pesanan</h2>
+      <div id="cartItems"></div>
+      <p class="total-all" id="cartTotal">Total: Rp0</p>
+      <h3 style="text-align:center;margin-top:15px;">Preview Struk</h3>
+      <div id="receiptPreview" class="receipt-preview">Belum ada data</div>
+      <div style="text-align:center;">
+        <button class="btn pay" onclick="printReceipt()">🖨 Cetak Struk</button>
+        <button class="btn cancel" onclick="closeCart()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GAS_URL="https://script.google.com/macros/s/AKfycbz8OQ2w68DXtXbYudR8nxV9KcruIl5iNQHFHG4ISOjg3S8W1X9ps8mw8U9H7hwqzIIN/exec";
+    let cart=[];
+
+    // load menu
+    async function loadMenu(){
+      let res=await fetch(GAS_URL+"?action=getMenu");
+      let data=await res.json();
+      let menuDiv=document.getElementById("menu");
+      data.forEach(item=>{
+        let card=document.createElement("div");
+        card.className="card";
+        card.innerHTML=`
+          <img src="${item.FotoURL}" alt="${item.Nama}" onclick='addToCart(${JSON.stringify(item)})'>
+          <div class="card-body">
+            <h3>${item.Nama}</h3>
+            <p>Rp ${item.Harga}</p>
+          </div>`;
+        menuDiv.appendChild(card);
+      });
+    }
+    loadMenu();
+
+    function addToCart(item){ 
+      cart.push({nama:item.Nama,harga:parseInt(item.Harga)}); 
+      updateCartCount(); 
+    }
+    function updateCartCount(){ 
+      document.getElementById("cart-count").innerText=cart.length; 
+    }
+    function openCart(){
+      let cartItems=document.getElementById("cartItems");
+      cartItems.innerHTML="";
+      let total=0;
+      cart.forEach((c)=>{ 
+        total+=c.harga;
+        let div=document.createElement("div");
+        div.className="cart-item";
+        div.innerHTML=`<strong>${c.nama}</strong><div class="subtotal">Rp${c.harga}</div>`;
+        cartItems.appendChild(div);
+      });
+      document.getElementById("cartTotal").innerText=`Total: Rp${total}`;
+      renderReceiptPreview();
+      document.getElementById("cart-popup").style.display="flex";
+    }
+    function closeCart(){ 
+      document.getElementById("cart-popup").style.display="none"; 
+    }
+
+    function loadStoreSetting(){ 
+      return JSON.parse(localStorage.getItem("storeSetting")) || {}; 
+    }
+    function loadPrinterSetting(){ 
+      return JSON.parse(localStorage.getItem("printerSetting")) || {}; 
+    }
+
+    function renderReceiptPreview(){
+      const store = loadStoreSetting();
+      let total=cart.reduce((a,b)=>a+b.harga,0);
+      let html = "<div style='text-align:center;'>";
+      html += "<br>";
+      html += `<strong style="font-size:16px;">${(store.name||"Nama Toko").toUpperCase()}</strong><br>`;
+      html += "====================<br>";
+      html += `${store.address||"Alamat Toko"}<br>`;
+      html += `${store.phone||"Nomor HP"}<br>`;
+      html += "--------------------<br>";
+      html += "RINCIAN PESANAN:<br>";
+      cart.forEach(c=>{ html += `${c.nama} - Rp${c.harga}<br>`; });
+      html += "--------------------<br>";
+      html += `TOTAL: Rp${total}<br>`;
+      html += "--------------------<br>";
+      html += `${store.footer||"Terima Kasih"}<br>`;
+      html += "Powered By Mykasir @P4170<br>";
+      html += "====================<br><br><br></div>";
+      document.getElementById("receiptPreview").innerHTML = html;
+    }
+
+    async function printReceipt(){
+      if(cart.length===0){ 
+        alert("Keranjang kosong!"); 
+        return; 
+      }
+
+      const store = loadStoreSetting();
+      const printer = loadPrinterSetting();
+      let total=cart.reduce((a,b)=>a+b.harga,0);
+
+      // buat isi struk
+      let receipt = "";
+      receipt += "\n";
+      receipt += "====================\n";
+      receipt += `     ${(store.name||"Nama Toko").toUpperCase()}\n`;
+      receipt += "====================\n";
+      receipt += `${store.address||"Alamat Toko"}\n`;
+      receipt += `${store.phone||"Nomor HP"}\n`;
+      receipt += "--------------------\n";
+      receipt += "RINCIAN PESANAN:\n";
+      cart.forEach(c=>{ receipt += `${c.nama} - Rp${c.harga}\n`; });
+      receipt += "--------------------\n";
+      receipt += `TOTAL: Rp${total}\n`;
+      receipt += "--------------------\n";
+      receipt += `${store.footer||"Terima Kasih"}\n`;
+      receipt += "Powered By Mykasir @P4170\n";
+      receipt += "====================\n";
+      receipt += "\n\n"; 
+
+      try {
+        let device;
+        if(printer.autoConnect==="yes" && printer.printerName){
+          // auto connect ke printer sesuai nama
+          device = await navigator.bluetooth.requestDevice({
+            filters: [{ name: printer.printerName }],
+            optionalServices: [0x18F0]
+          });
+        } else {
+          // manual pilih printer
+          device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: [0x18F0]
+          });
+        }
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(0x18F0);
+        const characteristic = await service.getCharacteristic(0x2AF1);
+        await characteristic.writeValue(new TextEncoder().encode(receipt));
+        alert("✅ Struk berhasil dicetak!");
+        cart=[]; updateCartCount(); closeCart();
+      } catch (err){
+        console.error(err);
+        alert("⚠️ Gagal mencetak struk. Pastikan printer Bluetooth sudah tersambung.");
+      }
+    }
+  </script>
+</body>
+</html>

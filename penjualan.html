@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Penjualan - My Kasirku</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #eaf4f4;
+      color: #333;
+    }
+    header {
+      background: linear-gradient(135deg, #00b894, #00997a);
+      color: white;
+      padding: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .container { padding: 20px; }
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 15px;
+    }
+    .product {
+      background: white;
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .product:hover { transform: scale(1.05); background: #dff9fb; }
+    .product img { max-width: 60px; }
+    .cart {
+      background: white;
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+    .cart h3 { margin-top: 0; color: #00695c; }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .btn {
+      background: linear-gradient(135deg,#00b894,#55efc4);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+      margin-top: 10px;
+      width: 100%;
+    }
+    .btn:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+
+  <header>💰 Penjualan</header>
+
+  <div class="container">
+    <!-- Daftar Produk -->
+    <div class="products" id="productList"></div>
+
+    <!-- Keranjang -->
+    <div class="cart">
+      <h3>🛒 Keranjang</h3>
+      <div id="cartItems"></div>
+      <hr>
+      <b>Total: Rp <span id="total">0</span></b>
+      <button class="btn" onclick="cetakStruk()">🖨 Cetak Struk</button>
+    </div>
+  </div>
+
+<script>
+let cart = [];
+
+// contoh data produk
+let products = [
+  {id:1, nama:"Nasi Goreng", harga:15000, img:"https://img.icons8.com/color/96/rice-bowl.png"},
+  {id:2, nama:"Ayam Bakar", harga:20000, img:"https://img.icons8.com/color/96/chicken.png"},
+  {id:3, nama:"Teh Manis", harga:5000, img:"https://img.icons8.com/color/96/tea.png"},
+  {id:4, nama:"Kopi", harga:8000, img:"https://img.icons8.com/color/96/coffee.png"}
+];
+
+function renderProducts(){
+  let list=document.getElementById("productList");
+  list.innerHTML="";
+  products.forEach(p=>{
+    let div=document.createElement("div");
+    div.className="product";
+    div.innerHTML=`<img src="${p.img}"><br>${p.nama}<br><b>Rp${p.harga}</b>`;
+    div.onclick=()=>addToCart(p);
+    list.appendChild(div);
+  });
+}
+
+function addToCart(p){
+  cart.push(p);
+  renderCart();
+}
+
+function renderCart(){
+  let items=document.getElementById("cartItems");
+  items.innerHTML="";
+  let total=0;
+  cart.forEach((c,i)=>{
+    total+=c.harga;
+    items.innerHTML+=`<div class="cart-item"><span>${c.nama}</span><span>Rp${c.harga}</span></div>`;
+  });
+  document.getElementById("total").innerText=total;
+}
+
+function cetakStruk(){
+  if(cart.length===0){
+    alert("Keranjang kosong!");
+    return;
+  }
+
+  // ambil setting dari localStorage
+  let setting = JSON.parse(localStorage.getItem("storeSetting")) || {};
+  let total = cart.reduce((a,b)=>a+b.harga,0);
+
+  let struk = "<div style='font-family: monospace; text-align:center;'>";
+  if(setting.logo){
+    struk += `<img src="${setting.logo}" style="max-height:80px"><br>`;
+  }
+  struk += `<h3>${setting.name || "Nama Toko"}</h3>`;
+  if(setting.address) struk += `<small>${setting.address}</small><br>`;
+  struk += "<hr>";
+
+  cart.forEach(c=>{
+    struk += `<div style='display:flex;justify-content:space-between;'>
+                <span>${c.nama}</span><span>Rp${c.harga}</span>
+              </div>`;
+  });
+  struk += `<hr><b>Total: Rp${total}</b><br><br><small>Terima kasih!</small></div>`;
+
+  let w=window.open("","Struk","width=300,height=500");
+  w.document.write(struk);
+  w.document.close();
+  w.print();
+}
+
+document.addEventListener("DOMContentLoaded", renderProducts);
+</script>
+
+</body>
+</html>
